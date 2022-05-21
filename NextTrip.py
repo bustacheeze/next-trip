@@ -22,6 +22,7 @@ def GetRoute(route):
         if RouteLower in Route['route_label'].lower():
             return Route
     
+    print(f"ERROR: Route \'{route}\' not found")
     return None
 
 # Get direction
@@ -36,6 +37,7 @@ def GetDirection(route_id, direction):
         if DirectionLower in Direction['direction_name'].lower():
             return Direction
 
+    print(f"ERROR: Direction \'{direction}\' not found")
     return None
 
 # Get stops
@@ -50,6 +52,7 @@ def GetStop(route_id, direction_id, stop):
         if StopLower in Stop['description'].lower():
             return Stop
 
+    print(f"ERROR: Stop \'{stop}\' not found")
     return None
 
 def GetTimeToNextTrip(route_id,direction_id,place_code):
