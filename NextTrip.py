@@ -1,4 +1,5 @@
-import requests
+from asyncio import current_task
+import requests, sys, time
 
 
 BUS_ROUTE = "METRO Blue Line"
@@ -22,7 +23,6 @@ def GetRoute(route):
         if RouteLower in Route['route_label'].lower():
             return Route
     
-    print(f"ERROR: Route \'{route}\' not found")
     return None
 
 # Get direction
@@ -37,7 +37,6 @@ def GetDirection(route_id, direction):
         if DirectionLower in Direction['direction_name'].lower():
             return Direction
 
-    print(f"ERROR: Direction \'{direction}\' not found")
     return None
 
 # Get stops
@@ -52,7 +51,6 @@ def GetStop(route_id, direction_id, stop):
         if StopLower in Stop['description'].lower():
             return Stop
 
-    print(f"ERROR: Stop \'{stop}\' not found")
     return None
 
 def GetTimeToNextTrip(route_id,direction_id,place_code):
@@ -66,26 +64,56 @@ def GetTimeToNextTrip(route_id,direction_id,place_code):
     else:
         return None
 
+
+
 if __name__ == "__main__":
-    route = GetRoute(BUS_ROUTE)
-    print(route)
-    
+
+    # Check for valid argument count
+    if (len(sys.argv) < 4):
+        print(f"ERROR: Invalid arguments, expected 3 and got {len(sys.argv)-1}.\nCorrect syntax: \'python NextTrip.py <ROUTE> <STOP> <DIRECTION>\'")
+        exit()
+
+
+
+    route = GetRoute(sys.argv[1])
+    if (route):
+        print(route)
+    else:
+        print(f"ERROR: Route \'{sys.argv[1]}\' was not found")
+        exit()
+
+
+
     direction = GetDirection(
         route['route_id'],
-        DIRECTION
+        sys.argv[3]
     )
-    print(direction)
+    if (direction):
+        print(direction)
+    else:
+        print(f"ERROR: Direction \'{sys.argv[3]}\' was not valid for Route \'{sys.argv[1]}\'")
+        exit()
+    
+
 
     stop = GetStop(
         route['route_id'],
         direction['direction_id'],
-        BUST_STOP_NAME
+        sys.argv[2]
     )
-    print(stop)
+    if (stop):
+        print(stop)
+    else:
+        print(f"ERROR: Stop \'{sys.argv[2]}\' was not valid for Route \'{sys.argv[1]}\' in Direction \'{sys.argv[3]}\'")
+        exit()
+
+
     
     nexttime = GetTimeToNextTrip(
         route['route_id'],
         direction['direction_id'],
         stop['place_code']
     )
-    print(nexttime)
+    if (nexttime):
+        current_time = time.time()
+        print(f"{int((nexttime - current_time) // 60)} minutes")
