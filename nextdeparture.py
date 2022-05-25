@@ -10,5 +10,7 @@ if __name__ == "__main__":
         exit()
     
     s = Schedule(sys.argv[1], sys.argv[3], sys.argv[2])
-
-    print(s.get_next_departure())
+    s.init_data()
+    next_departure = s.get_next_departure()
+    if next_departure:
+        print(next_departure)

@@ -6,81 +6,97 @@ class Schedule:
     API_BASE_URL = 'https://svc.metrotransit.org/nextripv2'
 
     def __init__(self, route_name, direction_name, stop_name):
+        self.route_name = route_name
+        self.direction_name = direction_name
+        self.stop_name = stop_name
         self.route = None
+        self.routes = None
         self.direction = None
+        self.directions = None
         self.stop = None
-        if not self.validate_route(route_name):
-            print(f"ERROR: Unable to find route with name \'{route_name}\'")
-            exit()
-        
-        if not self.validate_direction(self.route['route_id'] ,direction_name):
-            print(f"ERROR: Unable to find direction \'{direction_name}\' on route {self.route['route_label']}")
-            exit()
-        
-        if not self.validate_stop(self.route['route_id'], self.direction['direction_id'], stop_name):
-            print(f"ERROR: Unable to find stop \'{stop_name}\' on route {self.route['route_label']} going {self.direction['direction_name']}")
-            exit()
+        self.stops = None
 
 
-    # Validate the given route. Set self.route and return true if able to find a matching route for the given route name
-    def validate_route(self, route_name):
+    def init_data(self):
+        self.routes = self.get_routes()
+        self.route = self.search_routes(self.route_name)
+        if not self.route:
+            print(f"ERROR: Unable to find route with name \'{self.route_name}\'")
+            exit()
+        
+        self.directions = self.get_directions(self.route['route_id'])
+        self.direction = self.search_directions(self.direction_name)
+        if not self.direction:
+            print(f"ERROR: Unable to find direction \'{self.direction_name}\' on route {self.route['route_label']}")
+            exit()
+        
+        
+        self.stops = self.get_stops(self.route['route_id'], self.direction['direction_id'])
+        self.stop = self.search_stops(self.stop_name)
+        if not self.stop:
+            print(f"ERROR: Unable to find stop \'{self.stop_name}\' on route {self.route['route_label']} going {self.direction['direction_name']}")
+            exit()
+    
+    # Common get method, return request.get data from a given URL
+    def get_common(self,url):
+        r = requests.get(url, headers={'accept': 'application/json'})
+        r.raise_for_status()
+        return r
+
+    # Return list of routes
+    def get_routes(self):
+        return self.get_common(f"{self.API_BASE_URL}/routes").json()
+    
+    # Return list of directions for a given route
+    def get_directions(self, route_id):
+        return self.get_common(f"{self.API_BASE_URL}/directions/{route_id}").json()
+    
+    # Return list of stops for on the given route in the given direction
+    def get_stops(self, route_id, direction_id):
+        return self.get_common(f"{self.API_BASE_URL}/stops/{route_id}/{direction_id}").json()
+    
+    # Return list of departure times from the given stop on the given route in the given direction
+    def get_departure_times(self,route_id, direction_id, place_code):
+        return self.get_common(f"{self.API_BASE_URL}/{route_id}/{direction_id}/{place_code}").json()
+
+    # Search through the routes and return the first route matching the given route_name or None
+    def search_routes(self, route_name):
         route_name_lower = route_name.lower()
-        route_url = f"{self.API_BASE_URL}/routes"
-        route_request = requests.get(route_url, headers={'accept': 'application/json'})
-        route_request.raise_for_status()
-        routes = route_request.json()
-
-        for route in routes:
+        for route in self.routes:
             if route_name_lower in route['route_label'].lower():
-                self.route = route
-                return True
-        return False
+                return route
+        return None
     
 
-    # Validate the given direction. Set self.direction and return true if able to find a matching direction for the given route
-    def validate_direction(self, route_id, direction_name):
+    # Search through the directions and return the first direction matching the given direction_name or None
+    def search_directions(self, direction_name):
         direction_name_lower = direction_name.lower()
-        direction_url = f"{self.API_BASE_URL}/directions/{route_id}"
-        direction_request = requests.get(direction_url, headers={'accept': 'application/json'})
-        direction_request.raise_for_status()
-        directions = direction_request.json()
-
-        for direction in directions:
+        for direction in self.directions:
             if direction_name_lower in direction['direction_name'].lower():
-                self.direction = direction
-                return True
-        return False
+                return direction
+        return None
 
 
-    # Validate the given stop. Set self.stop and return true if able to find a matching stop on the given route in the given direction
-    def validate_stop(self, route_id, direction_id, stop_name):
+    # Search through the stops and return the first stop matching the given stop_name or None
+    def search_stops(self, stop_name):
         stop_lower = stop_name.lower()
-        stop_url = f"{self.API_BASE_URL}/stops/{route_id}/{direction_id}"
-        stop_request = requests.get(stop_url, headers={'accept': 'application/json'})
-        stop_request.raise_for_status()
-        stops = stop_request.json()
-
-        for stop in stops:
+        for stop in self.stops:
             if stop_lower in stop['description'].lower():
-                self.stop = stop
-                return True
-        return False
+                return stop
+        return None
     
 
     # Get the time of the next departure in epoch seconds, None if no more stops today
     def get_next_departure_time(self):
-        next_departure_url = f"{self.API_BASE_URL}/{self.route['route_id']}/{self.direction['direction_id']}/{self.stop['place_code']}"
-        next_departure_request = requests.get(next_departure_url, headers={'accept': 'application/json'})
-        next_departure_request.raise_for_status()
-        next_departure = next_departure_request.json()
+        departures = self.get_departure_times(self.route['route_id'], self.direction['direction_id'], self.stop['place_code'])
 
-        if len(next_departure['departures']) > 0:
-            return next_departure['departures'][0]['departure_time']
+        if len(departures['departures']) > 0:
+            return departures['departures'][0]['departure_time']
         else:
             return None
     
 
-    # Returns the time to the next depature as String
+    # Return the time to the next depature as String formatted "<INT> minutes" or None
     def get_next_departure(self):
         departure_time = self.get_next_departure_time()
         if departure_time:
