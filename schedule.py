@@ -7,12 +7,20 @@ class Schedule:
 
     def __init__(self, route_name, direction_name, stop_name):
         self.route = None
-        self.validate_route(route_name)
         self.direction = None
-        self.validate_direction(self.route['route_id'] ,direction_name)
         self.stop = None
-        self.validate_stop(self.route['route_id'], self.direction['direction_id'], stop_name)
-    
+        if not self.validate_route(route_name):
+            print(f"ERROR: Unable to find route with name \'{route_name}\'")
+            exit()
+        
+        if not self.validate_direction(self.route['route_id'] ,direction_name):
+            print(f"ERROR: Unable to find direction \'{direction_name}\' on route {self.route['route_label']}")
+            exit()
+        
+        if not self.validate_stop(self.route['route_id'], self.direction['direction_id'], stop_name):
+            print(f"ERROR: Unable to find stop \'{stop_name}\' on route {self.route['route_label']} going {self.direction['direction_name']}")
+            exit()
+
 
     # Validate the given route. Set self.route and return true if able to find a matching route for the given route name
     def validate_route(self, route_name):
