@@ -2,6 +2,7 @@ import unittest
 from schedule import Schedule
 import json
 
+
 class TestSchedule(unittest.TestCase):
 
     SAMPLE_ROUTES = json.loads('[{"route_id":"901","agency_id":0,"route_label":"METRO Blue Line"},{"route_id":"902","agency_id":0,"route_label":"METRO Green Line"},{"route_id":"906","agency_id":10,"route_label":"Airport Shuttle"},{"route_id":"903","agency_id":0,"route_label":"METRO Red Line"},{"route_id":"904","agency_id":0,"route_label":"METRO Orange Line"},{"route_id":"921","agency_id":0,"route_label":"METRO A Line"},{"route_id":"923","agency_id":0,"route_label":"METRO C Line"}]')
@@ -39,7 +40,7 @@ class TestSchedule(unittest.TestCase):
         test = self.schedule1.search_stops("MSP Airport Terminal 1")
         result = json.loads('{"place_code":"LIND","description":"MSP Airport Terminal 1 - Lindbergh Station"}')
         self.assertEqual(test, result)
-    
+
     def test_search_directions(self):
         test = self.schedule1.search_directions("north")
         result = json.loads('{"direction_id":0,"direction_name":"Northbound"}')
