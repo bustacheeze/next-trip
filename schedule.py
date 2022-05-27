@@ -1,8 +1,8 @@
 import requests, time
 
+
 class Schedule:
     """"Metro transit schedule class"""
-
     API_BASE_URL = 'https://svc.metrotransit.org/nextripv2'
 
     def __init__(self, route_name, direction_name, stop_name):
@@ -15,7 +15,6 @@ class Schedule:
         self.directions = None
         self.stop = None
         self.stops = None
-
 
     def init_data(self):
         self.routes = self.get_routes()
@@ -66,7 +65,6 @@ class Schedule:
             if route_name_lower in route['route_label'].lower():
                 return route
         return None
-    
 
     # Search through the directions and return the first direction matching the given direction_name or None
     def search_directions(self, direction_name):
@@ -76,7 +74,6 @@ class Schedule:
                 return direction
         return None
 
-
     # Search through the stops and return the first stop matching the given stop_name or None
     def search_stops(self, stop_name):
         stop_lower = stop_name.lower()
@@ -84,7 +81,6 @@ class Schedule:
             if stop_lower in stop['description'].lower():
                 return stop
         return None
-    
 
     # Get the time of the next departure in epoch seconds, None if no more stops today
     def get_next_departure_time(self):
@@ -94,13 +90,12 @@ class Schedule:
             return departures['departures'][0]['departure_time']
         else:
             return None
-    
 
     # Return the time to the next depature as String formatted "<INT> minutes" or None
     def get_next_departure(self):
         departure_time = self.get_next_departure_time()
         if departure_time:
             current_time = time.time()
-            return f"{int((departure_time - current_time) // 60)} minutes"
+            return f"{int((departure_time-current_time)//60)} minutes"
         else:
             return None

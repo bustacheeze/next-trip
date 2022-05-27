@@ -3,7 +3,6 @@ from schedule import Schedule
 
 
 if __name__ == "__main__":
-
     # Check for valid argument count
     if (len(sys.argv) < 4):
         print(f"ERROR: Invalid arguments, expected 3 and got {len(sys.argv)-1}.\nCorrect syntax: \'python NextTrip.py <ROUTE> <STOP> <DIRECTION>\'")
